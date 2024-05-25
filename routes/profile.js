@@ -66,6 +66,35 @@ router.get("/", auth, async (req, res) => {
       res.status(500).send("An error occurred while updating the profile.");
     }
   });
+
+  router.post("/profilePhoto", auth, async (req, res) => {
+    try {
+      const id = req.userId;
+      const photoUrl = req.body.profilePhoto;
+  
+      const found = await User.findOne({ _id: id });
+  
+      if (found) {
+        if (found.profile) {
+          found.profile.profilePhoto = photoUrl;
+        } else {
+          const profile = new Profile({
+            username: "Username",
+            bio: "Bio",
+            profilePhoto: photoUrl
+          });
+          await profile.save();
+          found.profile = profile;
+        }
+        await found.save();
+        res.send({ success: true });
+      } else {
+        res.status(404).send({ error: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).send({ error: "Internal server error" });
+    }
+  });
   
   
   
@@ -134,39 +163,7 @@ router.get("/", auth, async (req, res) => {
       res.status(500).send({ error: "Internal server error" });
     }
   });
-  
-  
-  router.post("/profilePhoto", auth, async (req, res) => {
-    try {
-      const id = req.userId;
-      const photoUrl = req.body.profilePhoto;
-  
-      const found = await User.findOne({ _id: id });
-  
-      if (found) {
-        if (found.profile) {
-          found.profile.profilePhoto = photoUrl;
-        } else {
-          const profile = new Profile({
-            username: "Username",
-            bio: "Bio",
-            profilePhoto: photoUrl
-          });
-          await profile.save();
-          found.profile = profile;
-        }
-        await found.save();
-        res.send({ success: true });
-      } else {
-        res.status(404).send({ error: "User not found" });
-      }
-    } catch (error) {
-      res.status(500).send({ error: "Internal server error" });
-    }
-  });
-  
-  
-  
+
   router.delete("/gallery", auth, async (req, res) => {
     try {
       const userId = req.userId;
@@ -192,6 +189,8 @@ router.get("/", auth, async (req, res) => {
     } catch (error) {
       res.status(500).send({ error: "Internal server error" });
     }
-  });
+  }); 
+  
+  
 
   module.exports = router;

@@ -15,7 +15,7 @@ const profile = require('./routes/profile');
 const app = express();
 
 
-app.use(cors());
+app.use(cors({origin: 'https://photo-stocks.netlify.app'}));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'photoStorage')));
