@@ -48,6 +48,8 @@ router.post("/login", async (req, res) => {
 
   router.get("/", async (req, res) => {
     try {
+      const index = parseInt(req.query.index);
+      const offset = parseInt(req.query.offset);
       const users = await User.find({}).populate('profile.photoGallery');
   
       const allPhotos = users.reduce((photos, user) => {
@@ -69,12 +71,23 @@ router.post("/login", async (req, res) => {
         }
         return photos;
       }, []);
-  
-      res.send(allPhotos);
+      
+      
+      if(index < allPhotos.length) {        
+        if(index + offset <= allPhotos.length) {
+          res.send(allPhotos.slice(index,index+offset));
+        } else {
+          res.send(allPhotos.slice(index));
+        }
+      } else {
+        res.send({message: "end reached"});
+      }
+
     } catch (error) {
       res.status(500).send({ error: "Internal server error" });
     }
   });
+
 
 
 

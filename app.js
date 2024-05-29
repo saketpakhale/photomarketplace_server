@@ -15,7 +15,7 @@ const profile = require('./routes/profile');
 const app = express();
 
 
-app.use(cors({origin: 'https://photo-stocks.netlify.app'}));
+app.use(cors({origin: ['https://photo-stocks.netlify.app', "http://localhost:3000", "http://localhost:3001/"]}));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'photoStorage')));
@@ -28,4 +28,4 @@ app.use("/profile", profile);
 
 const PORT = config.port;
 
-app.listen(PORT,() => console.log(`Photo-stock server is running on port ${PORT}.`))
+app.listen(PORT,() => console.log(`Photo-stock server is running on port ${PORT}.`));
