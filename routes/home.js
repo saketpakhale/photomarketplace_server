@@ -27,10 +27,10 @@ router.post("/login", async (req, res) => {
       console.log(error);
       res.status(500).send("An error occurred during login.");
     }
-  });
+});
 
 
-  router.post("/signup", async (req, res) => {
+router.post("/signup", async (req, res) => {
     try {
       const found = await User.findOne({ email: req.body.email });
   
@@ -44,15 +44,17 @@ router.post("/login", async (req, res) => {
     } catch (error) {
       res.status(500).send("An error occurred during signup.");
     }
-  });
+});
 
-  router.get("/", async (req, res) => {
+router.get("/", async (req, res) => {
     try {
-      const index = parseInt(req.query.index);
-      const offset = parseInt(req.query.offset);
-      const users = await User.find({}).populate('profile.photoGallery');
+      const index = parseInt(req.query.index) || 0;
+      const offset = parseInt(req.query.offset) || 10;
+      const filter = req.query.filter || "none";
+      const sort = req.query.sort || "none";
+      const users = await User.find({});
   
-      const allPhotos = users.reduce((photos, user) => {
+      let allPhotos = users.reduce((photos, user) => {
         if (user.profile && user.profile.photoGallery) {
           const userPhotos = user.profile.photoGallery
             .map((gallery) => ({
@@ -72,6 +74,17 @@ router.post("/login", async (req, res) => {
         return photos;
       }, []);
       
+      if(filter!=="none") {
+        allPhotos = allPhotos.filter((photo) => photo.category === filter);
+      }
+
+      if(sort !== "none") {
+        if(sort === "priceLowToHigh") {
+          allPhotos.sort((a,b) => a.sp - b.sp);
+        } else if (sort === "priceHighToLow"){
+          allPhotos.sort((a,b) => b.sp - a.sp);
+        }
+      }
       
       if(index < allPhotos.length) {        
         if(index + offset <= allPhotos.length) {
@@ -84,21 +97,22 @@ router.post("/login", async (req, res) => {
       }
 
     } catch (error) {
+      console.log(error);
       res.status(500).send({ error: "Internal server error" });
     }
-  });
-
-
-
-
+});
   
 router.get('/search', async (req, res) => {
     try {
-      const query = req.query.query;
+      const query = req.query.searchQuery;
+      const index = parseInt(req.query.index) || 0;
+      const offset = parseInt(req.query.offset) || 12;
+      const filter = req.query.filter || "none";
+      const sort = req.query.sort || "none";
   
-      const users = await User.find({}).populate('profile.photoGallery');
+      const users = await User.find({});
   
-      const searchResults = users.reduce((photos, user) => {
+      let searchResults = users.reduce((photos, user) => {
         if (user.profile && user.profile.photoGallery) {
           const userPhotos = user.profile.photoGallery
             .filter((gallery) => gallery.url !== '') // Exclude photos with empty URLs
@@ -125,10 +139,67 @@ router.get('/search', async (req, res) => {
         return photos;
       }, []);
   
-      res.send(searchResults);
+      if(filter!=="none") {
+        searchResults = searchResults.filter((photo) => photo.category === filter);
+      }
+
+      if(sort !== "none") {
+        if(sort === "priceLowToHigh") {
+          searchResults.sort((a,b) => a.sp - b.sp);
+        } else if (sort === "priceHighToLow"){
+          searchResults.sort((a,b) => b.sp - a.sp);
+        }
+      }
+      
+      if(index < searchResults.length) {        
+        if(index + offset <= searchResults.length) {
+          res.send(searchResults.slice(index,index+offset));
+        } else {
+          res.send(searchResults.slice(index));
+        }
+      } else {
+        res.send({message: "end reached"});
+      }
     } catch (error) {
       res.status(500).send({ error: "Internal server error" });
     }
-  });
+});
+
+router.get('/searchbar', async (req,res) => {
+    try {
+      const searchbarQuery = req.query.searchbarQuery;
+      if(searchbarQuery === "") {res.send([]);}
+      else {
+      const users = await User.find({});
+
+      let results = users.reduce((listOfSearchKeywords,user) => {
+        if (user.profile && user.profile.photoGallery) {
+          const userKeywords = user.profile.photoGallery
+            .filter((gallery) => gallery.url !== '') 
+            .reduce((keywords,gallery) => {         
+
+              const arrayOfKeywords = gallery.keywords.filter((word) => word.toLowerCase().includes(searchbarQuery.toLowerCase()));
+              keywords.push(...arrayOfKeywords); 
+              return keywords;      
+              
+            },[]);         
+
+          listOfSearchKeywords.push(...userKeywords);
+        }
+        return listOfSearchKeywords;
+      },[]);
+
+      results = results.filter((item,index) => {
+        return results.indexOf(item.toLowerCase()) === index;
+      });
+
+      res.send(results);
+    }
+      
+    } catch (error) {
+      res.status(500).send({error: "Internal server error"});
+    }
+    
+})
 
   module.exports = router

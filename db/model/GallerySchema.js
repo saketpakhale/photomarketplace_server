@@ -10,7 +10,4 @@ const gallerySchema = new mongoose.Schema ({
     likes: Number
 })
 
-
-const Gallery = new mongoose.model("Gallery",gallerySchema);
-
-module.exports = {Gallery, gallerySchema};
+module.exports = {gallerySchema};

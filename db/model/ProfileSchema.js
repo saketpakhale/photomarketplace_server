@@ -8,6 +8,5 @@ const profileSchema = new mongoose.Schema ({
     photoGallery: [gallerySchema]
 })
 
-const Profile = new mongoose.model("Profile", profileSchema);
 
-module.exports = {Profile, profileSchema};
+module.exports = {profileSchema};
